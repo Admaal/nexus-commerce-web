@@ -6,6 +6,8 @@ import * as z from "zod";
 import { Navbar } from "../components/layout/Navbar";
 import { Button } from "../components/ui/Button";
 import { getProductImage } from "../lib/constants";
+import { CartDrawer } from "../components/cart/CartDrawer";
+import { OrdersDrawer } from "../components/orders/OrdersDrawer";
 
 const checkoutSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -16,6 +18,8 @@ const checkoutSchema = z.object({
 export function CheckoutPage({ cart, orders }) {
   const navigate = useNavigate();
   const [globalError, setGlobalError] = useState(null);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [ordersOpen, setOrdersOpen] = useState(false);
   
   const {
     register,
@@ -46,19 +50,32 @@ export function CheckoutPage({ cart, orders }) {
   if (cart.items.length === 0) {
     return (
       <div className="page">
-        <Navbar itemCount={0} onCartOpen={() => {}} onOrdersOpen={() => {}} />
+        <Navbar itemCount={0} onCartOpen={() => setCartOpen(true)} onOrdersOpen={() => setOrdersOpen(true)} />
         <div className="container checkout-empty">
           <p className="checkout-empty__icon">🛒</p>
           <h2>Tu carrito está vacío</h2>
           <Button variant="primary" onClick={() => navigate("/")}>Volver a la tienda</Button>
         </div>
+        <CartDrawer
+          isOpen={cartOpen}
+          onClose={() => setCartOpen(false)}
+          items={cart.items}
+          total={cart.total}
+          onRemove={cart.removeItem}
+          onUpdateQuantity={cart.updateQuantity}
+        />
+        <OrdersDrawer
+          isOpen={ordersOpen}
+          onClose={() => setOrdersOpen(false)}
+          orders={orders.orders}
+        />
       </div>
     );
   }
 
   return (
     <div className="page">
-      <Navbar itemCount={cart.itemCount} onCartOpen={() => navigate(-1)} onOrdersOpen={() => {}} />
+      <Navbar itemCount={cart.itemCount} onCartOpen={() => setCartOpen(true)} onOrdersOpen={() => setOrdersOpen(true)} />
 
       <main className="container checkout-layout">
         <section className="checkout-form-section">
@@ -143,6 +160,19 @@ export function CheckoutPage({ cart, orders }) {
           </div>
         </aside>
       </main>
+      <CartDrawer
+        isOpen={cartOpen}
+        onClose={() => setCartOpen(false)}
+        items={cart.items}
+        total={cart.total}
+        onRemove={cart.removeItem}
+        onUpdateQuantity={cart.updateQuantity}
+      />
+      <OrdersDrawer
+        isOpen={ordersOpen}
+        onClose={() => setOrdersOpen(false)}
+        orders={orders.orders}
+      />
     </div>
   );
 }
