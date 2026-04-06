@@ -2,8 +2,8 @@ name: Supabase Keep Alive
 
 on:
   schedule:
-    # Se ejecuta a las 00:00 cada 3 días
-    - cron: "0 0 */3 * *"
+    # Se ejecuta cada 12 horas (UTC) para evitar pausas por inactividad
+    - cron: "0 */12 * * *"
   workflow_dispatch: # Permite ejecución manual
 
 jobs:
@@ -15,6 +15,22 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          curl -s -X GET "${SUPABASE_URL}/rest/v1/keep_alive?select=*" \
-          -H "apikey: ${SUPABASE_ANON_KEY}" \
-          -H "Authorization: Bearer ${SUPABASE_ANON_KEY}"
+          set -eu
+
+          if [ -z "${SUPABASE_URL}" ]; then
+            echo "SUPABASE_URL no esta configurada"
+            exit 1
+          fi
+
+          if [ -z "${SUPABASE_ANON_KEY}" ]; then
+            echo "SUPABASE_ANON_KEY no esta configurada"
+            exit 1
+          fi
+
+          curl --fail --show-error --silent \
+            --retry 3 \
+            --retry-delay 5 \
+            --max-time 30 \
+            -X GET "${SUPABASE_URL}/rest/v1/keep_alive?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}"
